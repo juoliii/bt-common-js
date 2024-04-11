@@ -94,6 +94,7 @@ export default {
     name:'advancedSearch',
     emits:['search'],
     props:{
+        //text,number,select,date {key: 'code',title: '样本编号',showType:'text',alias:'s'}
         conditions:{
             type:Array,
             default:[]
@@ -167,7 +168,7 @@ export default {
                             if(ele.condition) delete ele.condition
                         }
                         ele.key=ele.key.split('-')[1]
-                        if(!ele.value){
+                        if(ele.value===null || ele.value==='' || ele.value===undefined){
                             ele.value=null
                         }
                     })
@@ -177,7 +178,8 @@ export default {
             this.visible=false;
         },
         doReset(){
-            this.emit('search',[])
+            this.groups=[{details:[{showType:'text'}]}];
+            this.$emit('search',[])
             this.visible=false;
         }
     }

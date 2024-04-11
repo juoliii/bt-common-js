@@ -1,7 +1,8 @@
 import myTable from './src/components/myTable.vue'
+import advancedSearch from './src/components/advancedSearch.vue'
 import myQueryForm from './src/components/myQueryForm.vue'
 
-const components = [myTable,myQueryForm]
+const components = [advancedSearch,myTable,myQueryForm]
 
 const install = function (Vue) {   
     // 判断是否安装

@@ -1,4 +1,5 @@
 <template>
+    <slot name="topQuery" :queryForm="queryForm" :search="search" :reset="reset"></slot>
     <Card class="mainCustomTable" :class="customClass" :padding="10" :dis-hover="true" :bordered="false">
         <template #title>
             <div style="display: flex;min-height: 30px;"><slot :queryForm="queryForm">&nbsp;</slot></div>
@@ -6,7 +7,7 @@
         <template #extra>
             <div style="width:50rem;display: flex;align-items: center;justify-content:flex-end;">
                 <Input style="width: 15rem;margin-right: 20px;" search v-if="quickInputBox.show" type="text" :placeholder="quickInputBox.placeholder" v-model.trim="queryForm.key" @on-search="search"/>
-                <advancedSearch :conditions="searchConditions" @search="groups=>{queryForm._groups=groups;search();}"></advancedSearch>
+                <advancedSearch v-if="searchConditions.length>0" :conditions="searchConditions" @search="groups=>{queryForm._groups=groups;search();}"></advancedSearch>
                 <Tooltip content="列设置" placement="top" :transfer="true">
                     <Icon type="ios-list" @click="showColumns=true" size="30"/>
                 </Tooltip>
@@ -17,8 +18,10 @@
                 </div>
             </Drawer>
         </template>
-        <Table ref="selection" :columns="tableColumns" :max-height="height" border :data="tableData.list" @on-selection-change="modelValue.selectionChange" @on-column-width-resize="resizeWidth" @on-sort-change="sortChange">
-            <template #op="{row,index}" v-if="showOperate"></template>
+        <Table ref="selection" :columns="tableColumns" :max-height="height" :border="true" :data="tableData.list" @on-selection-change="modelValue.selectionChange" @on-column-width-resize="resizeWidth" @on-sort-change="sortChange">
+            <template #op="{row,index}" v-if="showOperate">
+                <slot name="op" :row="row" :index="index"></slot>
+            </template>
         </Table>
         <Page v-if="showPage" transfer :total="tableData.total" v-model="queryForm.pn" :page-size="queryForm.ps"  @on-change="changePage" @on-page-size-change="changePageSize" :page-size-opts="[10,50,100]" :show-total="true" :show-sizer="true" :show-elevator="true" class-name="mypage"/>
     </Card>
@@ -39,9 +42,12 @@
             modelValue:{
                 type:Object,
                 default:{
-                    data:{},
                     selectionChange:()=>{}
                 }
+            },
+            extraData:{
+                type:Object,
+                default:{}
             },
             columns:{
                 type:Array,
@@ -62,6 +68,10 @@
             showOperate:{
                 type:Boolean,
                 default:true
+            },
+            operateWidth:{
+                type:Number,
+                default:100
             },
             saveColumnId:{
                 type:String,
@@ -93,11 +103,13 @@
                 tableData:{total:0,list:[]}
             }
         },
-        watch:{},
+        watch:{
+            columns(val){
+                this.init();
+            }
+        },
         mounted() {
-            this.renderColumn();
-            this.queryForm=Object.assign({},this.queryForm,this.modelValue.data,{exportParams:{fullColumns:this.columns}})
-            this.search();
+            this.init();
         },
         computed:{
             tableColumns(){
@@ -105,6 +117,11 @@
             }
         },
         methods: {
+            init(){
+                this.renderColumn();
+                this.queryForm=Object.assign({},this.queryForm,this.extraData,{exportParams:{fullColumns:this.columns}})
+                this.search();
+            },
             changePage(page){
                 this.queryForm.pn=page;
                 this.getList();
@@ -119,11 +136,11 @@
                 this.getList();
             },
             reset(){
-                this.queryForm=Object.assign({},{pn:1,ps:10,showDetailQuery:this.queryForm.showDetailQuery,dynamicFields:{}},this.modelValue.data);
-                getList();
+                this.queryForm=Object.assign({},{pn:1,ps:10,showDetailQuery:this.queryForm.showDetailQuery,dynamicFields:{}},this.extraData);
+                this.getList();
             },
             getList(){
-                this.queryForm=Object.assign({},this.queryForm,this.modelValue.data);
+                this.queryForm=Object.assign({},this.queryForm,this.extraData);
                 return this.$http.postJSON(this.url,this.queryForm).then(data=>{
                     this.tableData=data;
                     if(!!this.modelValue.selectionChange){
@@ -147,21 +164,7 @@
                     this._columns.unshift({type: 'selection', width: 60,align: 'center' ,fixed:'left'});
                 }
                 if(this.showOperate){
-                    let width=150
-                    if(!!this.modelValue.buttons){
-                        let num=0
-                        this.modelValue.buttons.forEach(ele=>{
-                            if(ele.opType=='icon'&&!!ele.icon){
-                                num=num+1
-                            }else if(!!ele.title){
-                                num=num+ele.title.length
-                            }else{
-                                num=num+2
-                            }
-                        })
-                        width=50+70*num
-                    }
-                    this._columns.push({ title: '操作',align: 'center',slot: 'op',width: width,fixed:'right'});
+                    this._columns.push({ title: '操作',align: 'center',slot: 'op',width: this.operateWidth,fixed:'right'});
                 }
                 if(!!this.saveColumnId){
                     let list=localStorage.getItem(prefix+'saveColumnsList'+this.saveColumnId);
