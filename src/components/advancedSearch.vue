@@ -8,14 +8,17 @@
             <template #list>
                 <div class="addEventListener" style="width: 50rem;overflow: hidden;">
                     <div style="display: flex;width: 100%;position: relative;">
-                        <div class="customTab activedTab">
+                        <div class="customTab" @click="modalShowType=1" :class="modalShowType==1?'activedTab':''">
                             高级搜索
+                        </div>
+                        <div class="customTab" v-if="!!tableKey" @click="modalShowType=2" :class="modalShowType==2?'activedTab':''">
+                            已保存搜索
                         </div>
                         <span class="mycustomsave" @click="visible=false">
                             <Icon type="md-close" size="20"/>
                         </span>
                     </div>
-                    <div class="advancedSearch">
+                    <div v-if="modalShowType==1" class="advancedSearch">
                         <Row v-for="item,index of groups" :gutter="10">
                             <div class="eachCol" v-for="ele,num of item.details">
                                 <Col :span="3" style="text-align: center;">
@@ -76,19 +79,64 @@
                             </div>
                         </Row>
                     </div>
+                    <div v-else class="advancedSearch" style="display:flex;flex-direction: row;flex-wrap:wrap;">
+                        <div class="myCustomTag" style="max-width:calc(100% - 20px);min-width: 15%;" v-for="item of saveFormList">
+                            <span style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;" @click="toDetail(item)">
+                                {{ item.name }}
+                            </span>
+                            <div class="deleteTag">
+                                <Icon type="md-options" size="13" @click="editSaveItem(item)"></Icon>&nbsp;&nbsp;
+                                <Icon type="ios-trash" size="15" @click="deleteSave(item)"></Icon>
+                            </div>
+                        </div>
+                        <div v-if="saveFormList.length==0" style="margin-top: 15px;">
+                            暂未保存任何搜索条件！
+                        </div>
+                    </div>
                     <div style="height: 50px;display: flex;align-items: center;justify-content: center;position: relative;">
-                        <Button type="primary" @click="doSearch">搜 索</Button>
-                        <Button type="default" @click="doReset" style="margin-left: 15px;">清 空</Button>
+                        <Button type="primary" @click="doSearch" v-if="modalShowType==1">搜 索</Button>
+                        <Button type="default" @click="doReset" style="margin-left: 15px;" v-if="modalShowType==1">清 空</Button>
+                        <span class="mycustomsave" @click="saveForm={status:'1',isMenu:true};showSaveModal=true"  v-if="modalShowType==1 && !!tableKey">&nbsp;保存</span>
                     </div>
                 </div>
             </template>
         </Dropdown>
     </div>
+
+    <Modal
+        v-model="showSaveModal"
+        :title="(!saveForm.id?'保存':'编辑')+'搜索条件'">
+        <Form label-position="right" :label-width="120" ref="formValidate" :model="saveForm">
+            <Row>
+                <Col :span="20">
+                    <FormItem label="名称" prop="name" :rules="[{required:true, message: '必填'}]">
+                        <Input class="myinput" maxlength="100" type="text" placeholder="请输入" v-model="saveForm.name"></Input>
+                    </FormItem>
+                </Col>
+                <Col :span="20">
+                    <FormItem label="权限">
+                        <RadioGroup v-model="saveForm.status">
+                            <Radio label="1">个人</Radio>
+                            <Radio label="2">公开</Radio>
+                        </RadioGroup>
+                    </FormItem>
+                </Col>
+            </Row>
+        </Form>
+        <template #footer>
+            <div style="text-align: right;">
+                <div>
+                    <Button type="primary" @click="doSave">保 存</Button>
+                    <Button @click="showSaveModal=false">取 消</Button>
+                </div>
+            </div>
+        </template>
+    </Modal>
+
 </template>
 
 <script>
 import _ from "lodash";
-import moment from 'moment';
 
 export default {
     name:'advancedSearch',
@@ -98,10 +146,18 @@ export default {
         conditions:{
             type:Array,
             default:[]
+        },
+        tableKey:{
+            type:String,
+            default:''
         }
     },
     data(){
         return {
+            modalShowType:1,
+            saveForm:{},
+            showSaveModal:false,
+            saveFormList:[],
             visible:false,
             groups:[{details:[{showType:'text'}]}],
             algorithmList:[
@@ -116,7 +172,85 @@ export default {
             ]
         }
     },
+    mounted(){
+        if(this.tableKey){
+            this.getQueryFormList();
+        }
+    },
+    watch:{
+        tableKey(newValue,oldValue){
+            if(newValue){
+                this.getQueryFormList();
+            }
+        }
+    },
     methods:{
+        doSave(){
+            let self=this;
+            this.$refs['formValidate'].validate((valid)=>{
+                if(valid){
+                    if(!this.saveForm.id){
+                        this.saveForm.tableKey=this.tableKey;
+                        this.saveForm.data=JSON.stringify(this.groups)
+                    }
+                    this.$http.postJSON('/lims3/api/other/saveQueryCondition',this.saveForm).then(data=>{
+                        self.$Message.success('保存成功！')
+                        self.modalShowType=2;
+                        self.showSaveModal=false;
+                        self.getQueryFormList()
+                    })
+                }
+            })
+        },
+        editSaveItem(item){
+            let obj={id:item.id,name:item.name,status:item.status+'',isMenu:item.isMenu}
+            this.saveForm={...obj}
+            this.showSaveModal=true
+        },
+        deleteSave(item){
+            let self=this;
+            this.$Modal.confirm({
+                title:'是否确认删除保存条件？',
+                content:'条件名：' + item.name,
+                onOk(){
+                    self.$http.post('/lims3/api/other/removeQueryCondition',{id:item.id}).then(data=>{
+                        self.$Message.success('删除成功！')
+                        self.getQueryFormList()
+                    })
+                }
+            })
+        },
+        toDetail(searchItem){
+            searchItem.data.forEach(item=>{
+                if(!!item.details){
+                    item.details.forEach(ele=>{
+                        if(ele.showType=='select'){
+                            let arr=this.conditions.filter(cc=>(cc.alias+'-'+cc.code)==ele.key)
+                            if(arr.length==1){
+                                ele.options=arr[0].options
+                            }else{
+                                ele.options=function(){
+                                    return {label:'未找到该项',value:'0'}
+                                }
+                                ele.value=''
+                            }
+                        }
+                    })
+                }
+            })
+            this.groups=searchItem.data;
+            this.modalShowType=1;
+            if(!this.visible)
+                this.visible=true
+        },
+        getQueryFormList(){
+            this.$http.post('/lims3/api/other/getQueryConditionList',{tableKey:this.tableKey}).then(data=>{
+                data.forEach(item=>{
+                    item.data=JSON.parse(item.data)
+                })
+                this.saveFormList=data
+            })
+        },
         addOneItem(index,num){
             this.groups[index].details.splice((num+1),0,{condition:'and'})
         },
@@ -237,16 +371,72 @@ export default {
         padding:0 var(--advance-main-padding);
         overflow-y: auto;
         overflow-x:hidden;
-    }
-
-    .advancedSearch{
         .eachCol{
             width: 100%;
             padding: 10px 0;
             display: flex;
             align-items: center;
         }
+        .myCustomTag{
+            --custom-tag-border:1px solid gray;
+            border: var(--custom-tag-border);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: row;
+            padding-right: 50px;
+            margin-top: 10px;
+            position: relative;
+            margin-right: 10px;
+            > span{
+                padding: 5px;
+                width: 100%;
+                font-size: 0.75rem;
+                cursor: pointer;
+                position: relative;
+                overflow: hidden;
+                &:hover{
+                    &::before{
+                        content:'详情';
+                        position: absolute;
+                        width: 100%;
+                        text-align: center;
+                        border-radius: 5px 0 0 5px;
+                        top: 0;
+                        left: 0;
+                        padding: 5px;
+                        background-color: #a7bef7;
+                        animation: floatingDown 1s ease forwards;
+                    }
+                }
+            }
+            .deleteTag{
+                position: absolute;
+                width: 50px;
+                height: 100%;
+                top: 0;
+                right: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-left: var(--custom-tag-border);
+                :first-child{
+                    color: #2D8cF0;
+                    cursor: pointer;
+                    &:hover{
+                        color: #3b92ee;
+                    }
+                }
+                :nth-child(2){
+                    color: #ed4014;
+                    cursor: pointer;
+                    &:hover{
+                        color: #ee4d25;
+                    }
+                }
+            }
+        }
     }
+
     .mycustomsave{
         position: absolute;
         height: 100%;

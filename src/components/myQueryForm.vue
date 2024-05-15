@@ -8,7 +8,7 @@
                             <Input v-if="item.type=='text'" v-model.trim="modelValue[item.key]" />
                             <Input v-else-if="item.type=='number'" type="number" v-model.number="modelValue[item.key]" />
                             <Cascader v-else-if="item.type=='cascade'" :data="item.data" @on-change="p=>{modelValue[item.key]=p[1];item.onChange && item.onChange(p[1])}"/>
-                            <Select v-else-if="item.type=='select'" v-model="modelValue[item.key]">
+                            <Select v-else-if="item.type=='select'" v-model="modelValue[item.key]" :multiple="!!item.multiple">
                                 <Option v-for="option in item.options" :label="option.label" :value="option.value"></Option>
                             </Select>
                             <DatePicker v-else-if="item.type=='datetime'" type="datetime" @on-change="p=>modelValue[item.key]=p"/>
@@ -37,7 +37,7 @@ export default{
             type:Object,
             default:{}
         },
-        //{type:'',title:'',key:'',onChange:function(){},options:[{label:'',value:''}]}
+        //{type:'',title:'',key:'',onChange:function(){},options:[{label:'',value:''}],multiple:false}
         //type: text number cascade date select 
         items:{
             type:Array,
