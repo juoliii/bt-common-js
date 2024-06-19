@@ -38,7 +38,7 @@ export default{
             default:{}
         },
         //{type:'',title:'',key:'',onChange:function(){},options:[{label:'',value:''}],multiple:false}
-        //type: text number cascade date select 
+        //type: text number cascade datetime select 
         items:{
             type:Array,
             required:true

@@ -44,7 +44,7 @@
                                     <Select v-else-if="ele.showType=='select'" v-model="groups[index].details[num].value" multiple style="width: 100%;" transfer>
                                         <Option v-for="ops in ele.options()" :label="ops.label" :value="ops.value+''"></Option>
                                     </Select>
-                                    <DatePicker v-else-if="ele.showType=='date'" type="date" :format="ele.dateFormat||'YYYY-MM-DD'" :model-value="groups[index].details[num].value" @on-change="(date)=>{ groups[index].details[num].value=date }" style="width: 100%;" transfer/>
+                                    <DatePicker v-else-if="ele.showType=='date'" type="date" :format="ele.dateFormat||'yyyy-MM-dd'" :model-value="groups[index].details[num].value" @on-change="(date)=>{ groups[index].details[num].value=date }" style="width: 100%;" transfer/>
                                 </Col>
                                 <Col :span="1">
                                     <Icon type="md-add-circle" @click="addOneItem(index,num)" size="20"/>
@@ -142,7 +142,7 @@ export default {
     name:'advancedSearch',
     emits:['search'],
     props:{
-        //text,number,select,date {key: 'code',title: '样本编号',showType:'text',alias:'s'}
+        //text,number,select,date {key: 'code',title: '样本编号',showType:'text',alias:'s',dynamic:false}
         conditions:{
             type:Array,
             default:[]
@@ -264,11 +264,11 @@ export default {
             this.groups.splice(index,1)
         },
         onItemSelectChange(value,index,num){
-            let item=this.conditions.filter(item=>item.key==value.value.split('-')[1]&&item.title==value.label)
+            let item=this.conditions.filter(item=>item.key==value.value.split('-')[1] && item.title==value.label)
             if(item.length==1){
                 let obj={
                     condition:this.groups[index].details[num].condition,
-                    dynamic:!!item[0].isDynamic,
+                    dynamic:!!item[0].dynamic,
                     alias:item[0].alias,
                     value:'',
                     showType:item[0].showType,
