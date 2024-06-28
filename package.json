@@ -1,6 +1,6 @@
 {
   "name": "bt-common-js",
-  "version": "1.0.32",
+  "version": "1.0.34",
   "description": "common util",
   "main": "index.js",
   "scripts": {

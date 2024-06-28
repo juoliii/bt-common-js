@@ -1,8 +1,8 @@
-import myTable from './src/components/myTable.vue'
-import btTable from './src/components/bt-table.vue'
-import advancedSearch from './src/components/advancedSearch.vue'
-import myQueryForm from './src/components/myQueryForm.vue'
-import myExportList from './src/components/exportList.vue'
+import myTable from './src/components/custom/myTable.vue'
+import advancedSearch from './src/components/custom/advancedSearch.vue'
+import myQueryForm from './src/components/custom/myQueryForm.vue'
+import myExportList from './src/components/custom/exportList.vue'
+import btTable from './src/components/common/bt-table.vue'
 
 const components = [advancedSearch,myTable,myQueryForm,myExportList,btTable]
 

@@ -5,13 +5,19 @@
                 <template v-for="(item,index) in items">
                     <Col :span="6" v-if="index<3 || (index>2 && showDetailQuery)">
                         <FormItem :label="item.title">
+                            
                             <Input v-if="item.type=='text'" v-model.trim="modelValue[item.key]" />
+
                             <Input v-else-if="item.type=='number'" type="number" v-model.number="modelValue[item.key]" />
+
                             <Cascader v-else-if="item.type=='cascade'" :data="item.data" @on-change="p=>{modelValue[item.key]=p[1];item.onChange && item.onChange(p[1])}"/>
-                            <Select v-else-if="item.type=='select'" v-model="modelValue[item.key]" :multiple="!!item.multiple">
+
+                            <Select v-else-if="item.type=='select'" v-model="modelValue[item.key]" :multiple="!!item.multiple" @on-change="value=>!!item.onChange && item.onChange(value)">
                                 <Option v-for="option in item.options" :label="option.label" :value="option.value"></Option>
                             </Select>
-                            <DatePicker v-else-if="item.type=='datetime'" type="datetime" @on-change="p=>modelValue[item.key]=p"/>
+
+                            <DatePicker v-else-if="item.type=='datetime'" type="datetime" @on-change="p=>modelValue[item.key]=p" />
+                            
                         </FormItem>
                     </Col>
                 </template>
@@ -50,7 +56,14 @@ export default{
         reset:{
             type:Function,
             default:()=>{}
+        },
+        expand:{
+            type:Boolean,
+            default:false
         }
+    },
+    mounted() {
+        this.showDetailQuery=this.expand;
     },
     data(){
         return {
