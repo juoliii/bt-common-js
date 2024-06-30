@@ -3,8 +3,10 @@ import advancedSearch from './src/components/custom/advancedSearch.vue'
 import myQueryForm from './src/components/custom/myQueryForm.vue'
 import myExportList from './src/components/custom/exportList.vue'
 import btTable from './src/components/common/bt-table.vue'
+import btSearch from './src/components/common/bt-search.vue'
+import btAdvanceSearch from './src/components/common/bt-advance-search.vue'
 
-const components = [advancedSearch,myTable,myQueryForm,myExportList,btTable]
+const components = [advancedSearch,myTable,myQueryForm,myExportList,btTable,btSearch,btAdvanceSearch]
 
 const install = function (Vue) {   
     // 判断是否安装
