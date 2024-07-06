@@ -2,7 +2,7 @@
     <slot name="topQuery" :queryForm="queryForm" :search="search" :reset="reset"></slot>
     <Card class="mainCustomTable" :class="customClass" :padding="10" :dis-hover="true" :bordered="false">
         <template #title>
-            <div style="display: flex;min-height: 30px;"><slot :queryForm="queryForm">&nbsp;</slot></div>
+            <div style="display: flex;min-height: 30px;"><slot :tableData="tableData" :queryForm="queryForm">&nbsp;</slot></div>
         </template>
         <template #extra>
             <div style="width:50rem;display: flex;align-items: center;justify-content:flex-end;">
@@ -134,22 +134,21 @@
                 this.queryForm.ps=ps;
                 this.getList();
             },
-            search(){
+            async search(){
                 this.queryForm.pn=1;
-                this.getList();
+                return await this.getList();
             },
-            reset(){
+            async reset(){
                 this.queryForm=Object.assign({},{pn:1,ps:10,showDetailQuery:this.queryForm.showDetailQuery,dynamicFields:{}},this.extraData);
-                this.getList();
+                return await this.getList();
             },
-            getList(){
+            async getList(){
                 this.queryForm=Object.assign({},this.queryForm,this.extraData);
-                return this.$http.postJSON(this.url,this.queryForm).then(data=>{
-                    this.tableData=data;
-                    if(!!this.selectionChange){
-                        this.selectionChange([])
-                    }
-                })
+                this.tableData=await this.$http.postJSON(this.url,this.queryForm);
+                if(!!this.selectionChange){
+                    this.selectionChange([])
+                }
+                return this.tableData
             },
             sortChange(param){
                 if(param.key){
