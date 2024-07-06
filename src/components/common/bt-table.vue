@@ -28,7 +28,7 @@
 </template>
 <script>
     import { prefix } from '@/utils'
-    import advancedSearch from './advancedSearch.vue'
+    import advancedSearch from './bt-advance-search.vue'
 
     export default {
         name: "bt-table",
