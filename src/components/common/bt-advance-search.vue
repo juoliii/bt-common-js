@@ -39,7 +39,7 @@
                                     </Select>
                                 </Col>
                                 <Col :span="8">
-                                    <Input v-if="ele.showType=='text'" :type="ele.type==2?'textarea':'text'" v-model.trim="groups[index].details[num].value" style="width: 100%;" />
+                                    <Input v-if="ele.showType=='text'" :type="ele.type=='in'?'textarea':'text'" v-model.trim="groups[index].details[num].value" style="width: 100%;" />
                                     <Input v-else-if="ele.showType=='number'" type="number" v-model.number="groups[index].details[num].value" style="width: 100%;" />
                                     <Select v-else-if="ele.showType=='select'" v-model="groups[index].details[num].value" multiple style="width: 100%;" transfer>
                                         <Option v-for="ops in ele.options()" :label="ops.label" :value="ops.value+''"></Option>

@@ -33,7 +33,7 @@
     export default {
         name: "bt-table",
         components:{advancedSearch},
-        emits:['update:modelValue'],
+        emits:['update:modelValue','on-data-change'],
         props: {
             url:{
                 type:String,
@@ -148,6 +148,7 @@
                 if(!!this.selectionChange){
                     this.selectionChange([])
                 }
+                this.$emit('on-data-change',this.tableData);
                 return this.tableData
             },
             sortChange(param){
