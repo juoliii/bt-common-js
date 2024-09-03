@@ -3,7 +3,7 @@
         <Form label-position="right" :label-width="100">
             <Row :gutter="20">
                 <template v-for="(item,index) in items">
-                    <Col :span="6" v-if="index<3 || (index>2 && showDetailQuery)">
+                    <Col :span="6" v-show="index<3 || (index>2 && showDetailQuery)">
                         <FormItem :label="item.title">
                             
                             <Input v-if="item.type=='text'" v-model.trim="modelValue[item.key]" />
@@ -16,8 +16,16 @@
                                 <Option v-for="option in item.options" :label="option.label" :value="option.value"></Option>
                             </Select>
 
-                            <DatePicker v-else-if="item.type=='datetime'" type="datetime" @on-change="p=>modelValue[item.key]=p" />
-                            
+                            <DatePicker v-else-if="item.type=='datetime'" v-model="modelValue[item.key]" type="datetime" @on-change="p=>modelValue[item.key]=p" />
+
+                            <template v-else-if="item.type=='numberRange'">
+                                <Input type="number" v-model.number="modelValue[item.key+'Start']" style="width: 50px;"/>
+                                <span> - </span>
+                                <Input type="number" v-model.number="modelValue[item.key+'End']" style="width: 50px;"/>
+                            </template>
+                            <template v-else-if="item.type=='dateRange'">
+                                <DatePicker type="daterange" v-model="modelValue[item.key]" @on-change="p=>{modelValue[item.key+'Start']=p[0],modelValue[item.key+'End']=p[1]}" />
+                            </template>
                         </FormItem>
                     </Col>
                 </template>
@@ -37,14 +45,14 @@
 <script>
 export default{
     name: "myQueryForm",
-    emits:['update:modelValue','on-success'],
+    emits:['update:modelValue','on-success','on-changePanel'],
     props:{
         modelValue:{
             type:Object,
             default:{}
         },
         //{type:'',title:'',key:'',onChange:function(){},options:[{label:'',value:''}],multiple:false}
-        //type: text number cascade datetime select 
+        //type: text number cascade datetime select numberRange
         items:{
             type:Array,
             required:true
@@ -77,6 +85,7 @@ export default{
         },
         changeQueryForm(){
             this.showDetailQuery=!this.showDetailQuery;
+            this.$emit('on-changePanel',this.showDetailQuery);
         }
     }
 }
