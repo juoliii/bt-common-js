@@ -8,6 +8,8 @@
                             
                             <Input v-if="item.type=='text'" v-model.trim="modelValue[item.key]" />
 
+                            <Input v-else-if="item.type=='textarea'" type="textarea" v-model="modelValue[item.key]" />
+
                             <Input v-else-if="item.type=='number'" type="number" v-model.number="modelValue[item.key]" />
 
                             <Cascader v-else-if="item.type=='cascade'" :data="item.data" @on-change="p=>{modelValue[item.key]=p[1];item.onChange && item.onChange(p[1])}"/>
@@ -52,7 +54,7 @@ export default{
             default:{}
         },
         //{type:'',title:'',key:'',onChange:function(){},options:[{label:'',value:''}],multiple:false}
-        //type: text number cascade datetime select numberRange
+        //type: text textarea number cascade datetime select numberRange
         items:{
             type:Array,
             required:true
